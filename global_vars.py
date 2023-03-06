@@ -7,4 +7,3 @@ split_train_test = .8
 split_train_val = .8
 batch_size = 1
 epochs = 1
-

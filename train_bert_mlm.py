@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader, RandomSampler, BatchSampler
 from tqdm import tqdm
 import pandas as pd
 import wandb
+import pickle
 
 wandb.init(
     project="mbti_bert_mlm",
@@ -19,28 +20,12 @@ model = AutoModelForMaskedLM.from_pretrained(model_name).to(device)
 model.train()
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
-df = pd.read_csv("converted.csv")
+file = open("input_encoding_bert_final.pkl", 'rb')
+input_encoding = pickle.load(file)
+file = open("output_encoding_bert_final.pkl", 'rb')
+output_encoding = pickle.load(file)
 
 
-df['input'] = "Given: " + df['posts'] + "MBTI: " + tokenizer.mask_token
-df['output'] = "Given: " + df['posts'] + "MBTI: " + df['type']
-df = df[:50]
-
-input_encoding = tokenizer(
-    [str(s) for s in df["input"].tolist()],
-    padding=doPadding,
-    max_length=max_length_input,
-    truncation=doTruncate,
-    return_tensors="pt",
-)
-
-output_encoding = tokenizer(
-    [str(s) for s in df["output"].tolist()],
-    padding=doPadding,
-    max_length=max_length_input,
-    truncation=doTruncate,
-    return_tensors="pt",
-)
 
 input_ids, attention_mask = input_encoding.input_ids, input_encoding.attention_mask
 labels = output_encoding["input_ids"]
