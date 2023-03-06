@@ -1,0 +1,12 @@
+tensor([[    0, 18377,    35,  ...,     1,     1,     1],
+        [    0, 18377,    35,  ...,     1,     1,     1],
+        [    0, 18377,    35,  ...,     1,     1,     1],
+        ...,
+        [    0, 18377,    35,  ...,     1,     1,     1],
+        [    0, 18377,    35,  ...,     1,     1,     1],
+        [    0, 18377,    35,  ...,     1,     1,     1]])
+0it [00:00, ?it/s]
+Traceback (most recent call last):
+  File "/home/daviddu/Documents/EC_C147/MBTIPredictor/train_bert_mlm.py", line 73, in <module>
+    loss = model(input_ids=batch["input_ids"],
+TypeError: list indices must be integers or slices, not str

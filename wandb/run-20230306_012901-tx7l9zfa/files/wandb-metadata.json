@@ -1,0 +1,97 @@
+{
+    "os": "Linux-5.19.0-76051900-generic-x86_64-with-glibc2.35",
+    "python": "3.10.9",
+    "heartbeatAt": "2023-03-06T09:29:02.133850",
+    "startedAt": "2023-03-06T09:29:01.742622",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/home/daviddu/Documents/EC_C147/MBTIPredictor/train_bert_for_sequence_classfication.py",
+    "codePath": "train_bert_for_sequence_classfication.py",
+    "git": {
+        "remote": "https://github.com/daduuu/MBTIPredictor.git",
+        "commit": "487141690d6ecd2906a3895f286200be8e461eb9"
+    },
+    "email": "daviddu0425@gmail.com",
+    "root": "/home/daviddu/Documents/EC_C147/MBTIPredictor",
+    "host": "pop-os",
+    "username": "daviddu",
+    "executable": "/home/daviddu/miniconda3/bin/python",
+    "cpu_count": 10,
+    "cpu_count_logical": 12,
+    "cpu_freq": {
+        "current": 1.9604166666666671,
+        "min": 400.0,
+        "max": 3900.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3.203,
+            "min": 400.0,
+            "max": 4700.0
+        },
+        {
+            "current": 2.6,
+            "min": 400.0,
+            "max": 4700.0
+        },
+        {
+            "current": 3.445,
+            "min": 400.0,
+            "max": 4700.0
+        },
+        {
+            "current": 2.41,
+            "min": 400.0,
+            "max": 4700.0
+        },
+        {
+            "current": 2.526,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 2.51,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 2.6,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 2.6,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 1.379,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 2.6,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 0.868,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 0.483,
+            "min": 400.0,
+            "max": 3500.0
+        }
+    ],
+    "disk": {
+        "total": 907.4312782287598,
+        "used": 47.24564743041992
+    },
+    "memory": {
+        "total": 39.028961181640625
+    }
+}
