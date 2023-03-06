@@ -1,20 +1,33 @@
 import re
+import pandas as pd
+import numpy as np
 
-lines = []
-with open('trains_data.csv',encoding="utf8") as input:
-    lines = input.readlines()
+df = pd.read_csv("mbti_1.csv")
 
-conversion = '-"/.$*()@#%^&+=}{|:;\?_<>]['
-newtext = ''
-outputLines = []
-for line in lines:
-    line = str(line.encode('utf-8'))
-    temp = line
+df['posts'] = df['posts'].apply(lambda x: x.split("|||"))
+df = df.explode('posts')
+df = df.reset_index(drop=True).dropna()
+df = df[['posts', 'type']]
+
+def convert(string):
+    conversion = '-"/.$*()@#%^&+=}\'{|:;?_<>]['
+    newtext = ''
+    outputLines = []
+    temp = string
     temp = re.sub('http://\S+|https://\S+', '', temp)
     for c in conversion:
         temp = temp.replace(c, newtext)
-    outputLines.append(temp)
+    return temp
 
-with open('converted.csv', 'w') as output:
-    for line in outputLines:
-        output.write(line + "\n")
+df['posts'] = df['posts'].apply(convert)
+
+df['posts'].replace('', np.nan, inplace=True)
+df['type'].replace('', np.nan, inplace=True)
+
+df = df.dropna(axis=0, how='any')
+
+
+
+df.to_csv("converted.csv", index=False)
+
+print(df)
