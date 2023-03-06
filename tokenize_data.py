@@ -5,35 +5,27 @@ from datasets import Dataset
 
 import pandas as pd
 import pickle
+import global_vars
+import numpy as np
 
 
-tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
 df = pd.read_csv("converted.csv")
-df['input'] = "Given: " + df['posts'] + "MBTI: " + tokenizer.mask_token
-df['output'] = "Given: " + df['posts'] + " MBTI: " + df['type']
 
-df = df[200000:]
-input_encoding = tokenizer(
-    [str(s) for s in df["input"].tolist()],
-    padding=doPadding,
-    max_length=max_length_input,
-    truncation=doTruncate,
-    return_tensors="pt",
-)
 
-output_encoding = tokenizer(
-    [str(s) for s in df["output"].tolist()],
-    padding=doPadding,
-    max_length=max_length_input,
-    truncation=doTruncate,
-    return_tensors="pt",
-)
+ds = Dataset.from_pandas(df)
 
-with open('input_encoding_bert2.pkl', 'wb') as fp:
-    pickle.dump(input_encoding, fp)
-    print('dictionary saved successfully to file')
+def preprocess_data(examples):
+    try:
+        return tokenizer(examples["posts"], truncation=doTruncate, padding=doPadding, max_length=max_length_input)
+    except:
 
-with open('output_encoding_bert2.pkl', 'wb') as fp:
-    pickle.dump(input_encoding, fp)
+        raise Exception("Error in preprocessing data " + str(examples['new_col']))
+
+
+tokenized_inputs = ds.map(preprocess_data, batched=True)
+
+with open('input_encoding_bert.pkl', 'wb') as fp:
+    pickle.dump(tokenized_inputs, fp)
     print('dictionary saved successfully to file')
 
