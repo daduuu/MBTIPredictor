@@ -67,6 +67,7 @@ def toInt(string):
 
 df['type'] = df['type'].apply(toInt)
 
+
 df['posts'].replace('', np.nan, inplace=True)
 df['posts'].replace(' ', np.nan, inplace=True)
 df['posts'].replace('NA', np.nan, inplace=True)
@@ -75,6 +76,8 @@ df = df.reset_index(drop=True)
 
 df = df.dropna(axis=0, how='any')
 df['new_col'] = range(1, len(df) + 1)
+df['pad'] = " "
+
 
 df.to_csv("converted.csv", index=False)
 
