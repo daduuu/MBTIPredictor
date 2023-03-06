@@ -1,6 +1,6 @@
 from global_vars import *
 import torch
-from transformers import AutoModelForMultipleChoice, AutoTokenizer
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from datasets import Dataset
 from torch.utils.data import DataLoader, RandomSampler, BatchSampler
 from tqdm import tqdm
@@ -15,23 +15,23 @@ wandb.init(
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+m1 = {0: "ISTJ", 1: "ISFJ", 2: "INFJ", 3: "INTJ", 4: "ISTP", 5: "ISFP", 6: "INFP", 7: "INTP", 8: "ESTP", 9: "ESFP", 10: "ENFP", 11: "ENTP", 12: "ESTJ", 13: "ESFJ", 14: "ENFJ", 15: "ENTJ"}
+m2 = {"ISTJ" : 0, "ISFJ" : 1, "INFJ" : 2, "INTJ" : 3, "ISTP" : 4, "ISFP" : 5, "INFP" : 6, "INTP" : 7, "ESTP" : 8, "ESFP" : 9, "ENFP" : 10, "ENTP" : 11, "ESTJ" : 12, "ESFJ" : 13, "ENFJ" : 14, "ENTJ" : 15}
+
+
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForMultipleChoice.from_pretrained(model_name).to(device)
+model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=16, id2label=m1, label2id=m2).to(device)
 model.train()
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
-file = open("input_encoding_bert_final.pkl", 'rb')
+file = open("input_encoding_bert.pkl", 'rb')
 input_encoding = pickle.load(file)
-file = open("output_encoding_bert_final.pkl", 'rb')
-output_encoding = pickle.load(file)
+
+labels = pd.read_csv("converted.csv")['type']
 
 
 
-input_ids, attention_mask = input_encoding.input_ids, input_encoding.attention_mask
-labels = output_encoding["input_ids"]
-
-labels[labels == tokenizer.pad_token_id] = -100
-labels = torch.where((input_ids == tokenizer.mask_token_id) & (input_ids  != 101) & (input_ids  != 102), labels, -100)
+input_ids, attention_mask = input_encoding['input_ids'], input_encoding['attention_mask']
 
 dataset = Dataset.from_dict({"input_ids": input_ids,
                              "attention_mask": attention_mask,
