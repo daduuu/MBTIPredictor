@@ -1,9 +1,10 @@
-model_name = "distilroberta-base"
-learning_rate = 1e-4
-max_length_input = 256
+model_name = "roberta-base"
+learning_rate = 8e-5
+max_length_input = 512
 doTruncate = True
 doPadding = "max_length"
 split_train_test = .8
-split_train_val = .8
-batch_size = 4
-epochs = 1
+split_train_val = .95
+batch_size = 16
+epochs = 6
+freeze_threshold = -1

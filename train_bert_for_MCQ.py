@@ -13,7 +13,7 @@ wandb.init(
     entity="mbtipredictor"
 )
 
-device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:4" if torch.cuda.is_available() else "cpu")
 
 
 tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -21,12 +21,11 @@ model = AutoModelForMultipleChoice.from_pretrained(model_name).to(device)
 model.train()
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
-file = open("input_encoding_bert_small.pkl", 'rb')
+file = open("new.pkl", 'rb')
 input_encoding = pickle.load(file)
-input_encoding = input_encoding[:1000]
+input_encoding = input_encoding
 
-labels = pd.read_csv("converted.csv")['type']
-labels = labels[:1000]
+labels = pd.read_csv("converted_new.csv")['type']
 
 
 
@@ -67,7 +66,7 @@ for epoch in range(epochs):
         loss.backward()
         optimizer.step()
 
-        if i % 25 == 0:
+        if i % 50 == 0:
             model.eval()
             val_loss = 0
             count = 0

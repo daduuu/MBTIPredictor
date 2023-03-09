@@ -2,12 +2,11 @@ import re
 import pandas as pd
 import numpy as np
 
-df = pd.read_csv("mbti_1.csv")
+df = pd.read_csv("mbti_500.csv")
 
-df['posts'] = df['posts'].apply(lambda x: x.split("|||"))
-df = df.explode('posts')
-df = df.reset_index(drop=True).dropna()
-df = df[['posts', 'type']]
+
+df = df.sample(frac = 1, random_state = 42)
+
 
 def convert(string):
     conversion = '-"/.$*()@#%^&+=}\'{|:;?_<>]['
@@ -79,7 +78,7 @@ df['new_col'] = range(1, len(df) + 1)
 df['pad'] = " "
 
 
-df.to_csv("converted.csv", index=False)
+df.to_csv("converted_new.csv", index=False)
 
 
 
