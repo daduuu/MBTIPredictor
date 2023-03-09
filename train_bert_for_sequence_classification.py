@@ -13,8 +13,23 @@ import numpy as np
 from datetime import datetime
 import global_vars
 
+
+dict = {
+    "model_name": model_name,
+    "learning_rate": learning_rate,
+    "max_length_input": max_length_input,
+    "doTruncate": doTruncate,
+    "doPadding": doPadding,
+    "split_train_test": split_train_test,
+    "split_train_val": split_train_val,
+    "batch_size": batch_size,
+    "epochs": epochs,
+    "freeze_threshold": freeze_threshold,
+}
+
 wandb.init(
     project="mbti_bert_mlm",
+    config=dict,
     entity="mbtipredictor"
 )
 
@@ -174,6 +189,7 @@ def train(model, train_data, val_data, learning_rate, epochs):
                        "step": step})
             
             step += 1
+            
     torch.save(model.state_dict(), "bert_mlm2" + datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + ".pt")
                   
 
