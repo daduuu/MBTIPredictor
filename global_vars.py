@@ -5,6 +5,6 @@ doTruncate = True
 doPadding = "max_length"
 split_train_test = .8
 split_train_val = .95
-batch_size = 8
+batch_size = 16
 epochs = 6
 freeze_threshold = -1
