@@ -1,10 +1,10 @@
-model_name = "distilroberta-base"
-learning_rate = 1e-4
+model_name = "t5-base"
+learning_rate = 8e-5 #hyperparam
 max_length_input = 512
 doTruncate = True
-doPadding = True
+doPadding = "max_length"
 split_train_test = .8
-split_train_val = .8
-batch_size = 8
-epochs = 1
-
+split_train_val = .95
+batch_size = 16 #hyperparam
+epochs = 6 #hyperparam
+freeze_threshold = -1 #hyperparam
