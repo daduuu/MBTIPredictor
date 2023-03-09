@@ -169,6 +169,8 @@ def train(model, train_data, val_data, learning_rate, epochs):
                 | Val Loss: {total_loss_val / len(val_data): .5f}\
                 | Val Accuracy: {total_acc_val / len(val_data): .5f}')
             wandb.log({"validation loss":total_loss_val / len(val_data),
+                       "validation accuracy":total_acc_val / len(val_data),
+                          "train accuracy":train_acc / len(train_data),
                        "step": step})
             
             step += 1
