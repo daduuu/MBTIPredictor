@@ -159,7 +159,7 @@ def train(model, train_data, val_data, learning_rate, epochs):
                     loss_batch = loss_func(output, val_label.long())
                     total_loss_val += loss_batch.item()
                     
-                    total_acc_val = (output.argmax(dim=1) == val_label).sum().item()
+                    total_acc_val += (output.argmax(dim=1) == val_label).sum().item()
                     c += 1
 
                 
