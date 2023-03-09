@@ -1,0 +1,42 @@
+{
+  "citation": "",
+  "description": "",
+  "features": {
+    "posts": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "type": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "new_col": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "pad": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "__index_level_0__": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "input_ids": {
+      "feature": {
+        "dtype": "int32",
+        "_type": "Value"
+      },
+      "_type": "Sequence"
+    },
+    "attention_mask": {
+      "feature": {
+        "dtype": "int8",
+        "_type": "Value"
+      },
+      "_type": "Sequence"
+    }
+  },
+  "homepage": "",
+  "license": ""
+}

@@ -1,4 +1,6 @@
-     .idea
-     *.pkl
-     wandb
-     *.csv
+.idea
+*.pkl
+wandb
+*.csv
+*.pt
+converted.csv
