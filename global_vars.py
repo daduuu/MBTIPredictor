@@ -1,5 +1,5 @@
-model_name = "roberta-base"
-learning_rate = 8e-5
+model_name = "t5-base"
+learning_rate = 8e-5 #hyperparam
 max_length_input = 512
 doTruncate = True
 doPadding = "max_length"
