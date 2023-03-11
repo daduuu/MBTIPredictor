@@ -6,11 +6,13 @@ from transformers import AutoTokenizer
 import numpy as np
 from datasets import Dataset
 
-tokenizer = AutoTokenizer.from_pretrained("t5-base")
+tokenizer = AutoTokenizer.from_pretrained(model_t5)
 
 df = pd.read_csv("converted_new_for_T5.csv")
 
-np.random.seed(112)
+
+np.random.seed(42)
+
 
 df_train, df_val, df_test = np.split(df.sample(frac=1, random_state=42), [int(split_train_test*len(df)), int(split_train_val*len(df))])
 
