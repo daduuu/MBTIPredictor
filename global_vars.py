@@ -1,10 +1,11 @@
 model_name = "roberta-base"
-learning_rate = 8e-5
+model_t5 = "t5-base"
+learning_rate = 8e-5 #hyperparam
 max_length_input = 512
 doTruncate = True
 doPadding = "max_length"
 split_train_test = .8
-split_train_val = .95
-batch_size = 16
-epochs = 6
-freeze_threshold = -1
+split_train_val = .98
+batch_size = 4
+epochs = 2
+freeze_threshold = -2

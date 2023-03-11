@@ -1,6 +1,8 @@
+.env
 .idea
 *.pkl
 wandb
 *.csv
 *.pt
 converted.csv
+dataset
