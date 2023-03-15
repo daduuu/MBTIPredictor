@@ -65,12 +65,12 @@ class T5ForClassification(nn.Module):
 
         #Freeze Last freeze_threshold Layers
         if self.freeze:
-
-            for i in range(len(self.model.encoder.block.layer)):
-                if(i < len(self.model.encoder.block.layer) + freeze_threshold):
-                    for param in self.model.encoder.block[i].layer[0].parameters():
-                        if(param.requires_grad):
-                            param.requires_grad = False
+            #set freeze_threshold to be positive (postive # of layers from end to freese)
+            modules_to_freeze = modules_to_freeze = [model.encoder.block[i].layer[0] for i in range(len(model.encoder.block) - 1, len(model.encoder.block) - freeze_threshold -1, -1)]
+            
+            for module in modules_to_freeze:
+                for param in module.parameters():
+                    param.requires_grad = False
 
 model = T5ForClassification(freeze=True)
 
