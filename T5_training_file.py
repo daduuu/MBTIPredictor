@@ -28,14 +28,23 @@ wandb.init(
     entity="mbtipredictor"
 )
 
-device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:4" if torch.cuda.is_available() else "cpu")
 
 tokenizer = AutoTokenizer.from_pretrained(model_t5)
 
-base_model = AutoModelWithLMHead.from_pretrained(model_t5).to(device)
-base_model.train()
+model = AutoModelWithLMHead.from_pretrained(model_t5).to(device)
 
-optimizer = torch.optim.AdamW(base_model.parameters(), lr=learning_rate)
+
+frozen_end_modules = [model.encoder.block[i].layer[0] for i in range(len(model.encoder.block) - 1, len(model.encoder.block) - freeze_threshold -1, -1)]
+            
+for module in frozen_end_modules:
+    for param in module.parameters():
+        param.requires_grad = False
+        
+
+model.train()
+
+optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
 training_dataset_input = load_from_disk("dataset/train_dataset_input")
 training_dataset_labels = load_from_disk("dataset/train_dataset_labels")
@@ -53,26 +62,6 @@ validation_dataset = Dataset.from_dict({"input_ids": validation_dataset_input['i
 
 train_dataloader = DataLoader(training_dataset, batch_size=batch_size, drop_last=False)
 val_dataloader = DataLoader(validation_dataset, batch_size=batch_size, drop_last=False)
-
-class T5ForClassification(nn.Module):
-
-    def __init__(self, dropout=0.5, freeze=False):
-
-        super(T5ForClassification, self).__init__()
-
-        self.model = AutoModelWithLMHead.from_pretrained(base_model)
-        self.freeze = freeze
-
-        #Freeze Last freeze_threshold Layers
-        if self.freeze:
-            #set freeze_threshold to be positive (postive # of layers from end to freeze)
-            frozen_end_modules = [self.model.encoder.block[i].layer[0] for i in range(len(self.model.encoder.block) - 1, len(self.model.encoder.block) - freeze_threshold -1, -1)]
-            
-            for module in frozen_end_modules:
-                for param in module.parameters():
-                    param.requires_grad = False
-
-model = T5ForClassification(freeze=True)
 
 step = -1
 
