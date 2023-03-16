@@ -25,6 +25,7 @@ dict = {
     "batch_size": batch_size,
     "epochs": epochs,
     "freeze_threshold": freeze_threshold,
+    "layers_freeze": layers_freeze
 }
 
 wandb.init(
@@ -55,6 +56,7 @@ df = pd.read_csv("converted_new.csv")
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 df = df.sample(frac = 1, random_state = 42)
+df = df[:1000]
 
 np.random.seed(42)
 df_train, df_val, df_test = np.split(df.sample(frac=1, random_state=42), [int(split_train_test*len(df)), int(split_train_val*len(df))])
@@ -98,9 +100,7 @@ class BertForClassification(nn.Module):
                 if(param.requires_grad):
                     param.requires_grad = False
 
-
-            for i in range(len(self.model.encoder.layer)):
-                if(i < len(self.model.encoder.layer) + freeze_threshold):
+            for i in layers_freeze:
                     for param in self.model.encoder.layer[i].parameters():
                         if(param.requires_grad):
                             param.requires_grad = False
@@ -129,11 +129,11 @@ def train(model, train_data, val_data, learning_rate, epochs):
     model = model.to(device)
     loss_func = loss_func.to(device)
 
-    
     for epoch in range(epochs):
-
             train_acc = 0
+            train_acc_3 = 0
             train_loss = 0
+            num_examples = 0
             step = 0
             for train_input, train_label in tqdm(train_dataloader):
 
@@ -145,25 +145,69 @@ def train(model, train_data, val_data, learning_rate, epochs):
                 
                 loss_batch = loss_func(output, train_label.long())
                 train_loss += loss_batch.item()
-
-                wandb.log({"train loss":loss_batch.item(),
-                   "batch_index": step,
-                   "epoch": epoch,
-                   "step": step})
+                wandb.log({"Train Loss":loss_batch.item(),
+                   "Epoch": epoch,
+                   "Step": step})
                 
-                train_acc += (output.argmax(dim=1) == train_label).sum().item()
+                
+    
+                first = output.argmax(dim=1) == train_label
+                tops = torch.topk(output, 3, dim=1)[1]
+                second = torch.tensor([subarr[1].item() for subarr in tops]).to(device)
+                third = torch.tensor([subarr[2].item() for subarr in tops]).to(device)
+                second_bool = torch.logical_or((second == train_label), first)
+                last_bool = torch.logical_or((third == train_label), second_bool)
+
+                train_acc += first.sum().item()
+                train_acc_3 += last_bool.sum().item()
+                num_examples += batch_size
+
+                if step % loss_computation == 0:
+                        wandb.log({"Train accuracy Top 1": train_acc / num_examples,
+                                    "Train accuracy Top 3": train_acc_3 / num_examples})
 
                 model.zero_grad()
                 loss_batch.backward()
                 optimizer.step()
             
+                total_acc_val = 0
+                total_loss_val = 0
+                total_acc_val_3 = 0
+
+
+                if step % 200 == 0:
+                    for val_input, val_label in val_dataloader:
+
+                        val_label = val_label.to(device)
+                        mask = val_input['attention_mask'].to(device)
+                        input_id = val_input['input_ids'].squeeze(1).to(device)
+
+                        output = model(input_id, mask)
+
+                        loss_batch = loss_func(output, val_label.long())
+                        total_loss_val += loss_batch.item()
+                        
+                        first = output.argmax(dim=1) == val_label
+                        tops = torch.topk(output, 3, dim=1)[1]
+                        second = torch.tensor([subarr[1].item() for subarr in tops]).to(device)
+                        third = torch.tensor([subarr[2].item() for subarr in tops]).to(device)
+                        second_bool = torch.logical_or((second == val_label), first)
+                        last_bool = torch.logical_or((third == val_label), second_bool)
+                
+
+                        total_acc_val += first.sum().item()
+                        total_acc_val_3 += last_bool.sum().item()
+                    wandb.log({"Validation Loss":total_loss_val / len(val_data),
+                            "Validation Accuracy Top 1":total_acc_val / len(val_data),
+                                "Validation Accuracy Top 3":total_acc_val_3 / len(val_data),
+                        })
+                    model.train()
+                step += 1
+
             total_acc_val = 0
             total_loss_val = 0
-
-            with torch.no_grad():
-                c = 1
-
-                for val_input, val_label in val_dataloader:
+            total_acc_val_3 = 0
+            for val_input, val_label in val_dataloader:
 
                     val_label = val_label.to(device)
                     mask = val_input['attention_mask'].to(device)
@@ -174,21 +218,34 @@ def train(model, train_data, val_data, learning_rate, epochs):
                     loss_batch = loss_func(output, val_label.long())
                     total_loss_val += loss_batch.item()
                     
-                    total_acc_val += (output.argmax(dim=1) == val_label).sum().item()
-                    c += 1
+                    first = output.argmax(dim=1) == val_label
+                    tops = torch.topk(output, 3, dim=1)[1]
+                    second = torch.tensor([subarr[1].item() for subarr in tops]).to(device)
+                    third = torch.tensor([subarr[2].item() for subarr in tops]).to(device)
+                    second_bool = torch.logical_or((second == val_label), first)
+                    last_bool = torch.logical_or((third == val_label), second_bool)
+
+                    total_acc_val += first.sum().item()
+                    total_acc_val_3 += last_bool.sum().item()
+
+            wandb.log({
+                "Traing Loss Epoch": train_loss / len(train_data),
+                "Train Accuracy Top 1 Epoch": train_acc / len(train_data),
+                "Train Accuracy Top 3 Epoch": train_acc_3 / len(train_data),
+                "Val Loss Epoch": total_loss_val / len(val_data),
+                "Val Accuracy Epoch": total_acc_val / len(val_data)}
+            )
+        
 
                 
             
-            print(f'Epoch: {epoch} | Train Loss: {train_loss / len(train_data): .5f} \
+            """ print(f'Epoch: {epoch} | Train Loss: {train_loss / len(train_data): .5f} \
                 | Train Accuracy: {train_acc / len(train_data): .5f} \
                 | Val Loss: {total_loss_val / len(val_data): .5f}\
-                | Val Accuracy: {total_acc_val / len(val_data): .5f}')
-            wandb.log({"validation loss":total_loss_val / len(val_data),
-                       "validation accuracy":total_acc_val / len(val_data),
-                          "train accuracy":train_acc / len(train_data),
-                       "step": step})
+                | Val Accuracy: {total_acc_val / len(val_data): .5f}') """
             
-            step += 1
+                
+                
             
     torch.save(model.state_dict(), "bert_mlm2" + datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + ".pt")
                   

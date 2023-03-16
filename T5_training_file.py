@@ -18,7 +18,7 @@ dict = {
     "split_train_val": split_train_val,
     "batch_size": batch_size,
     "epochs": epochs,
-    "freeze_threshold": freeze_threshold,
+    "layers_freeze": layers_freeze,
 }
 
 wandb.init(
@@ -31,6 +31,14 @@ device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
 
 tokenizer = AutoTokenizer.from_pretrained(model_t5)
 model = AutoModelWithLMHead.from_pretrained(model_t5).to(device)
+
+frozen_end_modules = [model.encoder.block[i].layer[0] for i in layers_freeze]
+            
+for module in frozen_end_modules:
+    for param in module.parameters():
+        param.requires_grad = False
+
+
 model.train()
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
@@ -51,44 +59,53 @@ validation_dataset = Dataset.from_dict({"input_ids": validation_dataset_input['i
 train_dataloader = DataLoader(training_dataset, batch_size=batch_size, drop_last=False)
 val_dataloader = DataLoader(validation_dataset, batch_size=batch_size, drop_last=False)
 
-step = -1
 
 for epoch in range(epochs):
     train_acc = 0
+    train_acc_3 = 0
     train_loss = 0
+    num_examples = 0
     step = 0
     for batch in tqdm(train_dataloader):
-        step += 1
         optimizer.zero_grad()
-        loss = model(input_ids=batch["input_ids"],
-                     labels=batch["labels_input_ids"]).loss
+        output = model(input_ids=batch["input_ids"],
+                     labels=batch["labels_input_ids"])
+        loss = output.loss
         train_loss += loss.item()
 
-        wandb.log({"train loss":loss.item(),
-                   "batch_index": step,
-                   "epoch": epoch,
-                   "step": step})
+        wandb.log({"Train Loss":loss.item(),
+                   "Epoch": epoch,
+                   "Step": step})
         loss.backward()
         optimizer.step()
-
     
-    model.eval()
-    total_acc_val = 0
-    total_loss_val = 0
-    count = 0
+        model.eval()
+        count = 0
 
-    for val_batch in val_dataloader:
-        loss = model(input_ids=val_batch["input_ids"],
-                        labels=val_batch["labels_input_ids"]).loss # compute loss
-        total_loss_val += loss.item()
-        count += 1
+        total_loss_val = 0
 
-    print(f'Epoch: {epoch} | Train Loss: {train_loss / len(training_dataset): .5f} \
-                | Train Accuracy: {train_acc / len(training_dataset): .5f} \
-                | Val Loss: {total_loss_val / len(validation_dataset): .5f}\
-                | Val Accuracy: {total_acc_val / len(validation_dataset): .5f}')
-    wandb.log({"validation loss":total_loss_val / len(validation_dataset),
-                "validation accuracy":total_acc_val / len(validation_dataset),
-                    "train accuracy":train_acc / len(training_dataset),
-                "step": step})
-    model.train()
+        if step % 200 == 0:
+            for val_input, val_label in val_dataloader:
+
+                output = model(input_ids=batch["input_ids"],
+                     labels=batch["labels_input_ids"])
+                loss = output.loss
+                total_loss_val += loss.item()
+            
+            wandb.log({"Validation Loss":total_loss_val / len(validation_dataset),
+                })
+            model.train()
+        step += 1
+
+
+
+        """  wandb.log({
+        "Traing Loss Epoch": train_loss / len(train_data),
+        "Train Accuracy Top 1 Epoch": train_acc / len(train_data),
+        "Train Accuracy Top 3 Epoch": train_acc_3 / len(train_data),
+        "Val Loss Epoch": total_loss_val / len(val_data),
+        "Val Accuracy Epoch": total_acc_val / len(val_data)}
+        ) """
+
+    torch.save(model.state_dict(), "t5" + datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + ".pt")
+
