@@ -1,119 +1,94 @@
 from global_vars import *
-import torch
-from torch import nn
 from transformers import AutoModelForMultipleChoice, AutoTokenizer
-from datasets import Dataset
-from torch.utils.data import DataLoader, RandomSampler, BatchSampler
+from datasets import Dataset, load_from_disk
 from tqdm import tqdm
 import pandas as pd
 import wandb
+from wandb.keras import WandbMetricsLogger, WandbCallback
 import pickle
+import numpy as np
+
+import tensorflow as tf
+import os
+from tensorflow.keras import Model # if only machine learning were this easy :P
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.preprocessing.text import Tokenizer
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+#import any other libraries you want here:
+from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D, Dropout, BatchNormalization, SpatialDropout1D, LSTM, Embedding, GlobalAveragePooling1D
+from tensorflow.keras.activations import softmax
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.callbacks import EarlyStopping
+
+
+dict = {
+    "model_name": model_name,
+    "learning_rate": learning_rate,
+    "max_length_input": max_length_input,
+    "doTruncate": doTruncate,
+    "doPadding": doPadding,
+    "split_train_test": split_train_test,
+    "split_train_val": split_train_val,
+    "batch_size": batch_size,
+    "epochs": epochs,
+    "freeze_threshold": freeze_threshold,
+}
 
 wandb.init(
     project="mbti_bert_mlm",
+    config=dict,
     entity="mbtipredictor"
 )
 
-# Create Custom Model
-class CustomModel(nn.Module):
-    def __init__(self, input_dim, hidden_dim, layer_dim, output_dim):
-        super(CustomModel, self).__init__()
-        
-        # Number of hidden dimensions
-        self.hidden_dim = hidden_dim
-        
-        # Number of hidden layers
-        self.layer_dim = layer_dim
-        
-        # RNN
-        self.rnn = nn.RNN(input_dim, hidden_dim, layer_dim, batch_first=True, nonlinearity='relu')
-        
-        # Readout layer
-        self.fc = nn.Linear(hidden_dim, output_dim)
-    
-    def forward(self, x):
-        
-        # Initialize hidden state with zeros
-        h0 = self.init_hidden(batch_size)
-            
-        # One time step
-        out, h0 = self.rnn(x, h0)
-        out = self.fc(out[:, -1, :]) 
-        return out, h0
-    
-    def init_hidden(self, batch_size):
-        # This method generates the first hidden state of zeros which we'll use in the forward pass
-        hidden = torch.zeros(self.n_layers, batch_size, self.hidden_dim).to(device)
-         # We'll send the tensor holding the hidden state to the device we specified earlier as well
-        return hidden
+df = pd.read_csv("converted_new_for_custom.csv")
+df.info()
 
-device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
+# The maximum number of words to be used. (most frequent)
+MAX_NB_WORDS = 50000
+# Max number of words in each complaint.
+MAX_SEQUENCE_LENGTH = 500
+# This is fixed.
+EMBEDDING_DIM = 100
+tokenizer = Tokenizer(num_words=MAX_NB_WORDS, filters='!"#$%&()*+,-./:;<=>?@[\]^_`{|}~', lower=True)
+tokenizer.fit_on_texts(df['posts'].values)
+word_index = tokenizer.word_index
+print('Found %s unique tokens.' % len(word_index))
 
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = CustomModel(max_length_input, ).to(device)
-criterion = nn.CrossEntropyLoss()
-#model.train() #i don't think this will work
-optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+X = tokenizer.texts_to_sequences(df['posts'].values)
+X = pad_sequences(X, maxlen=MAX_SEQUENCE_LENGTH)
+print('Shape of data tensor:', X.shape)
 
-file = open("input_encoding_bert_small.pkl", 'rb')
-input_encoding = pickle.load(file)
-input_encoding = input_encoding[:1000]
+Y = pd.get_dummies(df['type']).values
+print('Shape of label tensor:', Y.shape)
 
-labels = pd.read_csv("converted.csv")['type']
-labels = labels[:1000]
+X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.10, random_state = 42)
+print(X_train.shape,Y_train.shape)
+print(X_test.shape,Y_test.shape)
+
+model = Sequential()
+model.add(Embedding(MAX_NB_WORDS, EMBEDDING_DIM, input_length=X.shape[1]))
+model.add(SpatialDropout1D(0.2))
+model.add(LSTM(100, dropout=0.2, recurrent_dropout=0.2, name = "lstm_1", return_sequences=True))
+model.add(LSTM(50, dropout=0.1, recurrent_dropout=0.1, name = "lstm_2", return_sequences=True))
+model.add(GlobalAveragePooling1D())
+model.add(Dense(16, activation='softmax', name = "dense"))
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 
+epochs = 2
+batch_size = 256
 
-input_ids, attention_mask = input_encoding['input_ids'], input_encoding['attention_mask']
+model.summary()
 
-dataset = Dataset.from_dict({"input_ids": input_ids,
-                             "attention_mask": attention_mask,
-                             "labels": labels
-                             }).with_format("torch", device=device)
+history = model.fit(X_train, 
+                    Y_train, 
+                    epochs=epochs, 
+                    batch_size=batch_size,
+                    validation_split=0.1,
+                    callbacks=[EarlyStopping(monitor='val_loss', patience=3, min_delta=0.0001), 
+                    WandbCallback()])
+model.save(os.path.join(wandb.run.dir, "model.h5"))
 
-temp_dataset = dataset.train_test_split(test_size=1 - split_train_test, shuffle=True, seed=42)
-test_dataset = temp_dataset["test"]
-
-temp2_dataset = temp_dataset["train"].train_test_split(test_size = 1 - split_train_val, shuffle=True, seed=42)
-
-train_dataset = temp2_dataset["train"]
-val_dataset = temp2_dataset["test"]
-
-
-train_dataloader = DataLoader(train_dataset, batch_size=batch_size, drop_last=False)
-val_dataloader = DataLoader(val_dataset, batch_size=batch_size, drop_last=False)
-
-
-step = -1
-
-for epoch in range(epochs):
-    for i, batch in tqdm(enumerate(train_dataloader)):
-        step += 1
-        optimizer.zero_grad()
-        loss = criterion(input_ids=batch["input_ids"],
-                     attention_mask=batch["attention_mask"],
-                     labels=batch["labels"])
-
-        wandb.log({"train loss":loss.item(),
-                   "batch_index": i,
-                   "epoch": epoch,
-                   "step": step})
-        loss.backward()
-        optimizer.step()
-
-        if i % 25 == 0:
-            model.eval()
-            val_loss = 0
-            count = 0
-            for j, val_batch in enumerate(val_dataloader):
-                loss = model(input_ids=val_batch["input_ids"],
-                             attention_mask=val_batch["attention_mask"],
-                             labels=val_batch["labels"]).loss # compute loss
-                val_loss += loss.item()
-                count += 1
-
-            wandb.log({"validation loss": val_loss / count,
-                       "step": step})
-            model.train()
-
-torch.save(model.state_dict(), "mbti_bert_small.pt")
+accr = model.evaluate(X_test,Y_test)
+print('Test set\n  Loss: {:0.3f}\n  Accuracy: {:0.3f}'.format(accr[0],accr[1]))
