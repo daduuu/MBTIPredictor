@@ -73,7 +73,7 @@ model.add(LSTM(100, dropout=0.2, recurrent_dropout=0.2, name = "lstm_1", return_
 model.add(LSTM(50, dropout=0.1, recurrent_dropout=0.1, name = "lstm_2", return_sequences=True))
 model.add(GlobalAveragePooling1D())
 model.add(Dense(16, activation='softmax', name = "dense"))
-model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(), optimizer='adam', metrics=['accuracy'])
 
 
 epochs = 2
