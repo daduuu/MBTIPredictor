@@ -13,6 +13,8 @@ import numpy as np
 from datetime import datetime
 import global_vars
 
+time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+print(time)
 
 dict = {
     "model_name": model_name,
@@ -25,16 +27,16 @@ dict = {
     "batch_size": batch_size,
     "epochs": epochs,
     "freeze_threshold": freeze_threshold,
-    "layers_freeze": layers_freeze
+    "layers_freeze": layers_freeze,
+    "time": time
 }
+
 
 wandb.init(
     project="mbti_bert_mlm",
     config=dict,
     entity="mbtipredictor"
 )
-time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-print(time)
 
 labels = {0: 0,
           1: 1,
@@ -58,6 +60,7 @@ df = pd.read_csv("converted_new.csv")
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 df = df.sample(frac = 1, random_state = 42)
+
 
 np.random.seed(42)
 df_train, df_val, df_test = np.split(df.sample(frac=1, random_state=42), [int(split_train_test*len(df)), int(split_train_val*len(df))])
@@ -103,7 +106,9 @@ class BertForClassification(nn.Module):
                 if(param.requires_grad):
                     param.requires_grad = False
 
-            for i in layers_freeze:
+
+            for i in range(len(self.model.encoder.layer)):
+                if(i < len(self.model.encoder.layer) + freeze_threshold):
                     for param in self.model.encoder.layer[i].parameters():
                         if(param.requires_grad):
                             param.requires_grad = False
@@ -178,7 +183,7 @@ def train(model, train_data, val_data, learning_rate, epochs):
                 total_acc_val_3 = 0
 
 
-                if step % 21214 == 0:
+                if step % 10607 == 0:
                     for val_input, val_label in val_dataloader:
 
                         val_label = val_label.to(device)
@@ -251,7 +256,7 @@ def train(model, train_data, val_data, learning_rate, epochs):
                 
             
     torch.save(model.state_dict(), "bert_mlm2" + time + ".pt")
-
+                  
 
 model = BertForClassification(freeze=True)
 

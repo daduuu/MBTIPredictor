@@ -29,7 +29,7 @@ wandb.init(
     entity="mbtipredictor"
 ) 
 
-device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:5" if torch.cuda.is_available() else "cpu")
 
 tokenizer = AutoTokenizer.from_pretrained(model_t5)
 model = T5ForConditionalGeneration.from_pretrained(model_t5).to(device)
@@ -107,7 +107,7 @@ for epoch in range(epochs):
         val_loss = 0
         val_acc = 0
 
-        if step % 10607 == 0:
+        if step % 10606 == 0:
             for val_batch in val_dataloader:
                 output = model(input_ids=val_batch["input_ids"],
                     attention_mask=val_batch["attention_mask"],
