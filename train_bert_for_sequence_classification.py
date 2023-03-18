@@ -28,7 +28,8 @@ dict = {
     "epochs": epochs,
     "freeze_threshold": freeze_threshold,
     "layers_freeze": layers_freeze,
-    "time": time
+    "time": time,
+    "dropout": .5
 }
 
 

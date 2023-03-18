@@ -29,7 +29,7 @@ wandb.init(
     entity="mbtipredictor"
 ) 
 
-device = torch.device("cuda:5" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:4" if torch.cuda.is_available() else "cpu")
 
 tokenizer = AutoTokenizer.from_pretrained(model_t5)
 model = T5ForConditionalGeneration.from_pretrained(model_t5).to(device)
