@@ -15,7 +15,11 @@ device  =  torch.device("cuda:5"  if  torch.cuda.is_available() else  "cpu")
 First download the [dataset](https://www.kaggle.com/datasets/zeyadkhalid/mbti-personality-types-500-dataset) and extract it. Rename it mbti_500.csv.
 
 ### LSTM Model Testing
-To be done
+First we have to generate the converted CSV
+```
+python convertedCSV_for_custom.py
+```
+Now you can run the custom_model.ipynb file, which tokenizes and trains the data.
 
 ### RoBERTa Model Testing
 First we have to generate the converted CSV. 
@@ -65,4 +69,3 @@ time = "2023-03-18-04-46-28"
 ```
 python T5_test_file.py
 ```
-
