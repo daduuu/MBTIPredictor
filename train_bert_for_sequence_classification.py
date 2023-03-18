@@ -33,6 +33,8 @@ wandb.init(
     config=dict,
     entity="mbtipredictor"
 )
+time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+print(time)
 
 labels = {0: 0,
           1: 1,
@@ -56,10 +58,11 @@ df = pd.read_csv("converted_new.csv")
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 df = df.sample(frac = 1, random_state = 42)
-df = df[:1000]
 
 np.random.seed(42)
 df_train, df_val, df_test = np.split(df.sample(frac=1, random_state=42), [int(split_train_test*len(df)), int(split_train_val*len(df))])
+ds_test = Dataset.from_pandas(df_test)
+ds_test.save_to_disk("BERT_TEST" + time)
 
 
 class Dataset(torch.utils.data.Dataset):
@@ -175,7 +178,7 @@ def train(model, train_data, val_data, learning_rate, epochs):
                 total_acc_val_3 = 0
 
 
-                if step % 200 == 0:
+                if step % 21214 == 0:
                     for val_input, val_label in val_dataloader:
 
                         val_label = val_label.to(device)
@@ -247,8 +250,8 @@ def train(model, train_data, val_data, learning_rate, epochs):
                 
                 
             
-    torch.save(model.state_dict(), "bert_mlm2" + datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + ".pt")
-                  
+    torch.save(model.state_dict(), "bert_mlm2" + time + ".pt")
+
 
 model = BertForClassification(freeze=True)
 

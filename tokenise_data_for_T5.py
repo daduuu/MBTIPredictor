@@ -5,10 +5,12 @@ import pickle
 from transformers import AutoTokenizer
 import numpy as np
 from datasets import Dataset
+from datetime import datetime
 
 tokenizer = AutoTokenizer.from_pretrained(model_t5)
 
 df = pd.read_csv("converted_new_for_T5.csv")
+time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
 
 np.random.seed(42)
@@ -39,7 +41,7 @@ ds_test_labels = Dataset.from_pandas(df_test_labels)
 def process_input(input):
     return tokenizer(input['posts'], padding=doPadding, max_length=max_length_input, truncation=doTruncate, return_tensors="pt")
 def process_labels(labels):
-    return tokenizer(labels['type'], padding=doPadding, max_length=max_length_input, truncation=doTruncate, return_tensors="pt")
+    return tokenizer(labels['type'], padding=doPadding, max_length=4, truncation=doTruncate, return_tensors="pt")
 
 training_dataset_input = ds_train_input.map(process_input, batched = True)
 validation_dataset_input = ds_val_input.map(process_input, batched = True)
@@ -49,10 +51,10 @@ training_dataset_labels = ds_train_labels.map(process_labels, batched=True)
 validation_dataset_labels = ds_val_labels.map(process_labels, batched=True)
 testing_dataset_labels = ds_test_labels.map(process_labels, batched=True)
 
-training_dataset_input.save_to_disk("dataset/train_dataset_input")
-validation_dataset_input.save_to_disk("dataset/validation_dataset_input")
-testing_dataset_input.save_to_disk("dataset/testing_dataset_input")
+training_dataset_input.save_to_disk("dataset" + time + "/train_dataset_input")
+validation_dataset_input.save_to_disk("dataset" + time + "/validation_dataset_input")
+testing_dataset_input.save_to_disk("dataset" + time + "/testing_dataset_input")
 
-training_dataset_labels.save_to_disk("dataset/train_dataset_labels")
-validation_dataset_labels.save_to_disk("dataset/validation_dataset_labels")
-testing_dataset_labels.save_to_disk("dataset/testing_dataset_labels")
+training_dataset_labels.save_to_disk("dataset" + time + "/train_dataset_labels")
+validation_dataset_labels.save_to_disk("dataset" + time + "/validation_dataset_labels")
+testing_dataset_labels.save_to_disk("dataset" + time + "/testing_dataset_labels")

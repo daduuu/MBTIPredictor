@@ -5,4 +5,7 @@ wandb
 *.csv
 *.pt
 converted.csv
-dataset
+dataset*
+BERT_TEST*
+
+__pycache__

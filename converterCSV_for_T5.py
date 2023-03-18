@@ -24,9 +24,9 @@ def convert(string):
     return temp
 
 df['posts'] = df['posts'].apply(convert)
-df['posts'] = "Context: " + df['posts']
+df['posts'] = "Context: " + df['posts'] + "predict the label: "
 
-df['type'] = "MBTI: " + df['type']
+df['type'] = df['type'].str.lower()
 
 
 df['posts'].replace('', np.nan, inplace=True)
