@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/home/daviddu/Documents/EC_C147/MBTIPredictor/train_bert_mlm.py", line 53, in <module>
-    labels = torch.where((input_ids == tokenizer.mask_token_id) & (input_ids  != 101) & (input_ids  != 102), labels, -100)
-RuntimeError: The size of tensor a (512) must match the size of tensor b (71) at non-singleton dimension 1
