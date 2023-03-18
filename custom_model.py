@@ -87,7 +87,7 @@ history = model.fit(X_train,
                     batch_size=batch_size,
                     validation_split=0.1,
                     callbacks=[EarlyStopping(monitor='val_loss', patience=3, min_delta=0.0001), 
-                    WandbCallback()])
+                    WandbCallback(log_batch_frequency = len(X_train)/batch_size)])
 model.save(os.path.join(wandb.run.dir, "model.h5"))
 
 accr = model.evaluate(X_test,Y_test)
