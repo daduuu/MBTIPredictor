@@ -39,6 +39,7 @@ Now we can calculate the testing accuracy. Make sure to update these lines with 
 model_saved = "bert_mlm22023-03-18-11-29-48.pt"
 ds = load_from_disk("BERT_TEST2023-03-18-11-29-48")
 ```
+Now we can run the following
 
 ```
 python test_bert_for_sequence_classification.py
@@ -66,6 +67,12 @@ Now we can run our test script. Make sure to update these lines with the correct
 model_saved = "t52023-03-18-13-13-00.pt"
 time = "2023-03-18-04-46-28"
 ```
+Now we can run the following
 ```
 python T5_test_file.py
 ```
+
+### Link to fine-tuned models
+Here are the [links](https://mega.nz/file/aR5mhZ4L#oCL-LRS_NqDY32udHqISnNy-cFS2E3CRL2utPgVZmi4) to the fine-tuned RoBERTa and T5 models and the corresponding datasets that we trained and used to calculate our test accuracy. 
+
+Careful! This file is around ~1.3 GB
