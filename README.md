@@ -14,12 +14,31 @@ device  =  torch.device("cuda:5"  if  torch.cuda.is_available() else  "cpu")
 ## How to Run
 First download the [dataset](https://www.kaggle.com/datasets/zeyadkhalid/mbti-personality-types-500-dataset) and extract it. Rename it mbti_500.csv.
 
+### wandb setup
+Create an account at [wandb](https://wandb.ai/). Install wandb python module and login with API key into terminal by using 
+```
+wandb login
+```
+Or on windows
+```
+python -m wandb login
+```
+Create a team and project to log the graphs and update the lines
+```
+wandb.init(
+project="$PROJECT_NAME",
+config=dict,
+entity="$TEAM_NAME"
+)
+```
+
 ### LSTM Model Testing
 First we have to generate the converted CSV
 ```
 python convertedCSV_for_custom.py
 ```
 Now you can run the custom_model.ipynb file, which tokenizes and trains the data.
+Our finished training model is stored as my_model.zip
 
 ### RoBERTa Model Testing
 First we have to generate the converted CSV. 
