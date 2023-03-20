@@ -5,7 +5,7 @@
 
 
 
-This is a project that uses the MBTI personality test to predict the personality type of a user based on their social media posts. The dataset we use is the [MBTI 500](https://www.kaggle.com/datasets/zeyadkhalid/mbti-personality-types-500-dataset) dataset sourced from kaggle.
+This is a project that uses models such as RoBERTa, T5, and LSTM to predict the personality type of a user based on their social media posts. The dataset we use is the [MBTI 500](https://www.kaggle.com/datasets/zeyadkhalid/mbti-personality-types-500-dataset) dataset sourced from kaggle.
 ## Important Setups
 Configurations for hyperparameters are set in [global_vars.py](https://github.com/daduuu/MBTIPredictor/blob/main/global_vars.py). If you want to run on CUDA device, make sure to edit that in the training files, specifically the line
 ```
